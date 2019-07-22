@@ -1,0 +1,33 @@
+filename = 'test1.txt'
+with open(filename) as f:
+    data = f.read().strip()[1:-1]
+
+print(data)
+from collections import defaultdict
+
+class Room:
+    all_rooms = {}
+    def __init__(self, row, col):
+        self.row = row
+        self.col = col
+        self.all_rooms[row, col] = self
+        self.directions = []
+        self.distance = 0
+
+    @property
+    def coord(self):
+        return (row, col)
+
+rooms = dict()
+start = 0
+rooms[0, 0] = start
+
+start = (0, 0)
+rooms[start] = 0
+
+regex = data
+
+def walk(regex, pos=0):
+    pass
+
+walk(regex)

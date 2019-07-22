@@ -1,0 +1,58 @@
+class Marble:
+    def __init__(self, value):
+        self.value = value
+        self.cw = None
+        self.acw = None
+
+    def remove(self):
+        cw_marb = self.cw
+        acw_marb = self.acw
+        acw_marb.cw = cw_marb
+        cw_marb.acw = acw_marb
+
+    def insert_cw(self, marble):
+        if self == self.cw:
+            self.acw = marble
+            self.cw = marble
+            marble.cw = self
+            marble.acw = self
+        else:
+            old_cw = self.cw
+            self.cw = marble
+            marble.acw = self
+            marble.cw = old_cw
+            old_cw.acw = marble
+marbles = []
+
+players = 413
+last_marble = 7108200
+
+first_marble = Marble(0)
+first_marble.cw = first_marble
+first_marble.acw = first_marble
+current_marble = first_marble
+
+current_player = 0
+player_scores = [0]*players
+import time
+start = time.time()
+for i in range(last_marble):
+    next_marble = i+1
+    num_marbles = i
+    if next_marble % 23 == 0:
+        for j in range(7):
+            current_marble = current_marble.acw
+        remove_marble = current_marble
+        player_scores[current_player] += next_marble + remove_marble.value
+        current_marble = remove_marble.cw
+        remove_marble.remove()
+    else:
+        new_marble = Marble(next_marble)
+        current_marble.cw.insert_cw(new_marble)
+        current_marble = new_marble
+    current_player += 1
+    current_player %= players
+
+print(max(player_scores))
+elapsed = time.time() - start
+print("{:.2f}s elapsed".format(elapsed))

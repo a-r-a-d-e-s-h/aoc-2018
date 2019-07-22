@@ -1,0 +1,3 @@
+1024 (too high)
+994 (too high)
+992 Correct

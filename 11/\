@@ -1,0 +1,27 @@
+with open('input.txt', 'r') as f:
+    data = f.read()
+
+data = 2568
+
+def do_calc(x, y, n):
+    val = (x+10)*((x+10)*y + n)
+    t = val%1000
+    t //= 100
+    return t-5
+
+print(do_calc(3,5,8))
+print(do_calc(122,79,57))
+print(do_calc(217,196,39))
+print(do_calc(101,153,71))
+
+grid_size = 5
+
+import numpy
+
+grid = numpy.zeros((grid_size, grid_size))
+print(grid)
+coords = numpy.arange(grid_size)+1
+print(coords)
+
+grid[:None] = coords
+print(grid)

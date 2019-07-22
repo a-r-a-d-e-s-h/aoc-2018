@@ -1,0 +1,209 @@
+with open('input.txt') as f:
+    data = f.read().strip().splitlines()
+
+from collections import *
+from itertools import *
+
+test1 = """#######
+#.G.E.#
+#E.G.E#
+#.G.E.#
+#######"""
+
+test2 = """#########
+#G..G..G#
+#.......#
+#.......#
+#G..E..G#
+#.......#
+#.......#
+#G..G..G#
+#########"""
+
+test3 = """#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######"""
+
+test4 = """#######
+#G..#E#
+#E#E.E#
+#G.##.#
+#...#E#
+#...E.#
+#######"""
+
+data = test3.splitlines()
+
+height = len(data)
+width = max(len(l) for l in data)
+
+walls = [[0]*width for __ in range(height)]
+
+class Unit:
+    def __init__(self, char, uid, pos):
+        self.char = char
+        self.pos = pos
+        self.id = uid
+        self.attack = 3
+        self.hp = 200
+
+def pos_nbours(r, c):
+    return sorted(((r-1, c), (r+1, c), (r, c-1), (r, c+1)))
+
+units = []
+
+for row in range(height):
+    for col in range(width):
+        if data[row][col] == '#':
+            walls[row][col] = 1
+        elif data[row][col] in ('E', 'G'):
+            units.append(Unit(data[row][col], len(units), (row, col)))
+
+def print_map():
+    unit_positions = {u.pos:u for u in units}
+
+    for row_num, row in enumerate(walls):
+        chars = []
+        for col_num, val in enumerate(row):
+            if val:
+                chars.append('#')
+            else:
+                if (row_num, col_num) in unit_positions:
+                    chars.append(unit_positions[row_num, col_num].char)
+                else:
+                    chars.append('.')
+        print(''.join(chars))
+
+def open_nbours(unit):
+    row, col = unit.pos
+    unit_positions = {u.pos:u for u in units}
+    nbours = []
+    for r, c in pos_nbours(*unit.pos):
+        if walls[r][c] == 0 and (r, c) not in unit_positions:
+            nbours.append((r,c))
+    return sorted(nbours)
+
+def target_nbours(unit):
+    row, col = unit.pos
+    unit_positions = {u.pos:u for u in units}
+    targets = []
+    for r, c in pos_nbours(*unit.pos):
+        if (r,c) in unit_positions and unit_positions[r,c].char != unit.char:
+            targets.append((r,c))
+    return targets
+
+step_grid = [[0]*width for __ in range(height)]
+
+def find_nearest_in_range(unit):
+    for row in range(height):
+        for col in range(width):
+            step_grid[row][col] = 0
+    pos = unit.pos
+    unit_positions = {u.pos:u for u in units}
+    nearest_enemies = []
+    to_do = [pos]
+    steps = 0
+    while to_do and not nearest_enemies:
+        steps += 1
+        new_to_do = []
+        for r, c in to_do:
+            for nr, nc in pos_nbours(r, c):
+                if (nr, nc) in unit_positions:
+                    if unit_positions[nr, nc].char != unit.char:
+                        nearest_enemies.append({'enemy': (nr, nc), 'adj': (r, c), 'steps': steps-1})
+                        continue
+                else:
+                    if step_grid[nr][nc] > 0:
+                        continue
+                    if walls[nr][nc]:
+                        continue
+                    step_grid[nr][nc] = steps
+                    new_to_do.append((nr, nc))
+
+        to_do = new_to_do
+    return nearest_enemies
+
+def find_shortest_step(start, dest):
+    for row in range(height):
+        for col in range(width):
+            step_grid[row][col] = 0
+    steps = 0
+    to_do = [dest]
+    unit_positions = {u.pos:u for u in units}
+    shortest_paths = []
+    while to_do and not shortest_paths:
+        steps += 1
+        new_to_do = []
+        for r,c in to_do:
+            for nr, nc in pos_nbours(r, c):
+                if (nr, nc) == start:
+                    shortest_paths.append((r, c))
+                    continue
+                if (nr, nc) in unit_positions:
+                    continue
+                if walls[nr][nc]:
+                    continue
+                if (nr, nc) == dest:
+                    continue
+                if step_grid[nr][nc] > 0:
+                    continue
+                step_grid[nr][nc] = steps
+                new_to_do.append((nr, nc))
+        to_do = new_to_do
+    return sorted(shortest_paths)
+
+
+def do_turn():
+    pos_keys = sorted(u.pos for u in units)
+    to_move = sorted(units, key=lambda x:x.pos)
+    for u in to_move:
+        if u not in units: # must have died
+            continue
+        if not [unit for unit in units if unit.char != u.char]:
+            print("Combat ends")
+            return True
+        pos = u.pos
+        unit_positions = {u.pos:u for u in units}
+        targets = target_nbours(u)
+        chosen = None
+        if targets:
+            pass # don't need to move
+        else:
+            nearest = find_nearest_in_range(u)
+            choices = sorted([n['adj'] for n in nearest])
+            if choices:
+                chosen = choices[0]
+        if chosen:
+            shortest = find_shortest_step(u.pos, chosen)[0]
+            u.pos = shortest
+        targets = target_nbours(u)
+        if targets:
+            min_hp = min(unit_positions[x].hp for x in targets)
+            choices = []
+            for x in targets:
+                if unit_positions[x].hp == min_hp:
+                    choices.append(x)
+            choice = sorted(choices)[0]
+            target = unit_positions[choice]
+            target.hp -= u.attack
+            if target.hp <= 0:
+                units.remove(target)
+print_map()
+full_rounds = 0
+while 1:
+    ended = do_turn()
+    print_map()
+    if ended:
+        print("Remaining hp:")
+        remaining = sum(u.hp for u in units)
+        print(remaining)
+        print("Rounds:", full_rounds)
+        print(remaining * full_rounds)
+        break
+    full_rounds += 1
+
+

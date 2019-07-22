@@ -1,0 +1,71 @@
+filename = "test.txt"
+with open(filename) as f:
+    lines = f.read().strip().splitlines()
+
+height = len(lines)
+width = len(lines[0])
+
+def nbours(row, col):
+    min_row = max(row-1, 0)
+    max_row = min(row+2, height)
+    min_col = max(col-1, 0)
+    max_col = min(col+2, width)
+    def it():
+        for r in range(min_row, max_row):
+            for c in range(min_col, max_col):
+                if r!= row or c != col:
+                    yield (r, c)
+    return list(it())
+
+print('height:', height)
+print('width:', width)
+
+start_grid = [list(l) for l in lines]
+
+from collections import Counter
+
+def adj_counts(row, col, grid):
+     chars = [grid[r][c] for (r,c) in nbours(row, col)]
+     return Counter(chars)
+
+c = (adj_counts(0, 0, start_grid))
+print(c['#'], c['|'], c['.'])
+
+def do_step(grid):
+    height = len(grid)
+    width = len(grid[0])
+
+    new_grid = [[0]*width for __ in range(height)]
+
+    for row in range(height):
+        for col in range(height):
+            char = grid[row][col]
+            counts = adj_counts(row, col, grid)
+            if char == '.':
+                if counts['|'] >= 3:
+                    new_grid[row][col] = '|'
+                else:
+                    new_grid[row][col] = '.'
+            elif char == '|':
+                if counts['#'] >= 3:
+                    new_grid[row][col] = '#'
+                else:
+                    new_grid[row][col] = '|'
+            elif char == '#':
+                if counts['#'] >= 1 and counts['|'] >= 1:
+                    new_grid[row][col] = '#'
+                else:
+                    new_grid[row][col] = '.'
+    return new_grid
+
+def print_grid(grid):
+    lines = [''.join(l) for l in grid]
+    print('\n'.join(lines))
+
+print_grid(start_grid)
+grid = do_step(start_grid)
+print()
+for i in range(10):
+    print_grid(grid)
+    print()
+

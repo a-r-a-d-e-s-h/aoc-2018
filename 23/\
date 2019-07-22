@@ -1,0 +1,78 @@
+filename = 'test.txt'
+
+with open(filename) as f:
+    lines = f.read().strip().splitlines()
+import re
+def parse_line(line):
+    p0, p1, p2, r = map(int, re.findall('-?\d+', line))
+    return (p0, p1, p2), r
+
+nanobots = [parse_line(l) for l in lines]
+
+
+def taxicab(a, b):
+    ret = []
+    for a1, b1 in zip(a, b):
+        ret.append(abs(a1-b1))
+    return sum(ret)
+
+def dists_from(nanobot, nanobots):
+    pos, r = nanobot
+    dists = [taxicab(pos, nb[0]) for nb in nanobots]
+    return dists
+
+print("Part 1")
+
+
+max_r = max(nanobots, key=lambda x: x[1])
+dists = dists_from(max_r, nanobots)
+print(sum(d <= max_r[1] for d in dists))
+
+def ranges_overlap(bot, nanobots):
+    pos, r = bot
+    ret = []
+    for pos2, r2 in nanobots:
+        if taxicab(pos, pos2) <= r + r2:
+            ret.append((pos2, r2))
+
+def overlap_with_all(bots, nanobots):
+    ret = []
+    for pos2, r2 in nanobots:
+        if all(taxicab(pos2, b[0]) <= r2 + b[1] for b in bots):
+            ret.append((pos2, r2))
+    return ret
+
+max_overlaps_found = 0
+
+print("Part 2")
+import numpy
+
+num_bots = len(nanobots)
+
+overlap_grid = numpy.zeros((num_bots, num_bots))
+
+from itertools import combinations, product
+
+for i,j in product(range(num_bots), repeat=2):
+    bot1, bot2 = nanobots[i], nanobots[j]
+    pos1, r1 = bot1
+    pos2, r2 = bot2
+    if taxicab(pos1, pos2) <= r1 + r2:
+        overlap_grid[i,j] = 1
+
+print(overlap_grid)
+
+def find_max_collections(overlap_grid, indices, max_size=0):
+    shape = overlap_grid.shape
+    items = shape[0]
+    current_rows = overlap_grid[indices]
+
+    common_indices = numpy.prod(current_rows, 0)
+    print(common_indices)
+    remaining = common_indices - indices
+    print(remaining)
+
+index_mask = numpy.array([1,0,0,0,1,1], dtype='bool')
+find_max_collections(overlap_grid, index_mask, max_size=0)
+
+

@@ -1,0 +1,23 @@
+I was never happy with my, or any solution I found here on reddit's, for Day 23 part 2. Perhaps this solution idea has already been posted on here, but if so I couldn't find it. This seems to be the only solution that should always work, seems to work in reasonable time for various kinds of values, and doesn't cop out by using something like z3, or by relying on the kind of data this puzzle generates (eg, >90% of cubes overlap at a common unique point)
+
+It uses a combination of two ideas that I found discussed in others' solutions. First the idea of converting each nanobots octahedral range into a new space.
+The point (a, b, c) is within range of a nanobot centered at (x, y, z) with radius r if and only if |x-a| + |y-b| + |z-c| <= r, and this is equivalent to the four conditions holding:
+
+-(x-a) + (y-b) + (z-c) in [-r, r]
+(x-a) - (y-b) + (z-c) in [-r, r]
+(x-a) + (y-b) - (z-c) in [-r, r]
+and
+(x-a) + (y-b) + (z-c) in [-r, r]
+
+So as others have mentioned, transforming each point into the 4d coordinate (-x+y+z, x-y+z, x+y-z, x+y+z), we then have a simple criteria as to whether this 4-d coordinate lies within the range of a nanobot:
+Every octahedral range of a nanobot is the intersection of a 4-dimensional hypercube and the 3-dimensional surface of points (x0, x1, x2, x3) satisfying x3 = x0 + x1 + x2.
+Once we convert every region into this 4-dimensional bounding box, we can then apply a second idea of line-scanning in each of the 4 coordinate directions. I saw other peolpe discussing line-scanning methods, but dismissing it since we have octahedra instead of cubmes. The process works roughly as follows:
+
+First scan one coordinate, and consider which hypercubes have the possibility of intersecting at points alaong this coordinate, and split into chunks accordingly.
+Then for each chunk, scan in the next coordinate direction.
+Now the chunks are rectangles, and we scan in the 3rd direction.
+Finally the chunks are cuboidal, and we scan in the 4th coordinate direction, and we can throw away any hypercubes which won't have any points intersecting the coplane x3 = x0 + x1 + x2.
+
+Also at all stages in this, we can prune away avenues of search which have no possibilty of reaching our maximum number of overlaps found so far, eg if we have already found a point where 500 ranges intersect, and we see that between x=0 and x=50 that only 200 ranges have an x-value between 0 and 50, then we can just ignore this range.
+
+
